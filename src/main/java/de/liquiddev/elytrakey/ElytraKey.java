@@ -52,36 +52,46 @@ public class ElytraKey implements ModInitializer {
 		swapElytraKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("Swap Elytra", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, cat));
 		elytraOptionsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding("ElytraKey Options", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, cat));
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			while (swapElytraKeyBinding.wasPressed()) {
-				swapElytra();
-			}
+    while (swapElytraKeyBinding.wasPressed()) {
+        swapElytra();
+    }
 
-			while (elytraOptionsKeyBinding.wasPressed()) {
-				mc.setScreen(new ElytraKeyOptions());
-			}
+    while (elytraOptionsKeyBinding.wasPressed()) {
+        mc.setScreen(new ElytraKeyOptions());
+    }
 
-			if (mc.player == null) {
-				return;
-			}
+    if (mc.player == null) {
+        return;
+    }
 
-			boolean fireworksInMainHand = mc.player.getInventory().getSelectedStack().getItem() == Items.FIREWORK_ROCKET;
-			boolean fireworksInOffHand = mc.player.getInventory().getStack(OFF_HAND_SLOT_ID).getItem() == Items.FIREWORK_ROCKET;
-			boolean isFalling = !mc.player.isOnGround() && mc.player.getVelocity().getY() < -0.65;
-			boolean hasLanded = mc.player.isOnGround() || mc.player.isTouchingWater();
+    boolean fireworksInMainHand = mc.player.getInventory().getSelectedStack().getItem() == Items.FIREWORK_ROCKET;
+    boolean fireworksInOffHand = mc.player.getInventory().getStack(OFF_HAND_SLOT_ID).getItem() == Items.FIREWORK_ROCKET;
+    boolean maceInMainHand = mc.player.getInventory().getSelectedStack().getItem() == Items.MACE;
+    boolean maceInOffHand = mc.player.getInventory().getStack(OFF_HAND_SLOT_ID).getItem() == Items.MACE;
 
-			if ((AUTO_EQUIP_FIREWORKS && fireworksInMainHand) || (AUTO_EQUIP_FALL && isFalling)) {
-				boolean elytraEquipped = isElytraEquipped();
-				if (!elytraEquipped) {
-					equipElytra();
-					wasAutoEquipped = true;
-				}
-			} else {
-				boolean unEquip = AUTO_UNEQUIP && wasAutoEquipped && hasLanded;
-				if (unEquip && isElytraEquipped()) {
-					wasAutoEquipped = false;
-					equipChestplate();
-				}
-			}
+    boolean isFalling = !mc.player.isOnGround() && mc.player.getVelocity().getY() < -0.65;
+    boolean hasLanded = mc.player.isOnGround() || mc.player.isTouchingWater();
+
+    // Auto-equip Elytra when using fireworks or falling
+    if ((AUTO_EQUIP_FIREWORKS && fireworksInMainHand) || (AUTO_EQUIP_FALL && isFalling)) {
+        boolean elytraEquipped = isElytraEquipped();
+        if (!elytraEquipped) {
+            equipElytra();
+            wasAutoEquipped = true;
+        }
+    } else {
+        boolean holdingMace = maceInMainHand || maceInOffHand;
+
+        // Auto-unequip Elytra after landing or when holding a mace
+        boolean unEquip = (AUTO_UNEQUIP && wasAutoEquipped && hasLanded) || holdingMace;
+
+        if (unEquip && isElytraEquipped()) {
+            wasAutoEquipped = false;
+            equipChestplate();
+        }
+    }
+});
+
 
 			// Equip elytra, start gliding and boost with fireworks when right-clicking with a firework
 			if (EASY_TAKEOFF && (fireworksInMainHand || fireworksInOffHand)) {
