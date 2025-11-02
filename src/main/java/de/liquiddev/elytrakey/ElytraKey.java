@@ -41,6 +41,7 @@ public class ElytraKey implements ModInitializer {
 	private static KeyBinding swapElytraKeyBinding;
 	private static KeyBinding elytraOptionsKeyBinding;
 
+	private boolean wasHoldingMace = false;
 	private boolean wasAutoEquipped = false;
 	private boolean startFlying = false;
 	private boolean boostNextTick = false;
@@ -63,6 +64,16 @@ public class ElytraKey implements ModInitializer {
     if (mc.player == null) {
         return;
     }
+
+	boolean holdingMace = maceInMainHand || maceInOffHand;
+
+// Only triggers chestpiece equip when first equiping mace
+if (holdingMace && !wasHoldingMace && isElytraEquipped()) {
+    wasAutoEquipped = false;
+    equipChestplate();
+}
+
+wasHoldingMace = holdingMace;
 
     boolean fireworksInMainHand = mc.player.getInventory().getSelectedStack().getItem() == Items.FIREWORK_ROCKET;
     boolean fireworksInOffHand = mc.player.getInventory().getStack(OFF_HAND_SLOT_ID).getItem() == Items.FIREWORK_ROCKET;
